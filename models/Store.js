@@ -90,7 +90,7 @@ const storeSchema = new mongoose.Schema({
     default: Date.now
   },
   subscription: {
-      planId: { type: String, default: 'free' }, // 'free', 'pro', 'business'
+      planId: { type: String, default: 'free' }, // 'free', 'quarterly', 'halfyearly', 'yearly'
       planName: { type: String, default: '7 Day Free Trial' },
       startDate: { type: Date, default: Date.now },
       expiryDate: { 

@@ -175,4 +175,9 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
 
 
 
+// ─── SUBSCRIPTION UPGRADE ───
+const { upgradeStorePlan, getSubscription } = require('../controllers/subscriptionController');
+router.get('/my/subscription', protect, getSubscription);
+router.put('/my/upgrade', protect, upgradeStorePlan);
+
 module.exports = router;
