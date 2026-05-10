@@ -115,17 +115,13 @@ router.put('/:id', protect, async (req, res) => {
   }
 });
 
-// @DELETE /api/services/:id — Provider: delete service
+// @DELETE /api/services/:id — Provider: permanently delete service
 router.delete('/:id', protect, async (req, res) => {
   try {
     const store = await Store.findOne({ owner: req.user._id });
-    const service = await Service.findOneAndUpdate(
-      { _id: req.params.id, store: store._id },
-      { isActive: false },
-      { new: true }
-    );
+    const service = await Service.findOneAndDelete({ _id: req.params.id, store: store._id });
     if (!service) return res.status(404).json({ success: false, message: 'Service not found' });
-    res.json({ success: true, message: 'Service deleted' });
+    res.json({ success: true, message: 'Service permanently deleted' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

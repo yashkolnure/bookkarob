@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Store = require('../models/Store');
 const { superAdminProtect } = require('../middleware/superAdminAuth');
@@ -40,13 +41,15 @@ router.get('/accounts', superAdminProtect, async (req, res) => {
   try {
     const stores = await Store.find({})
       .populate('owner', 'name email isActive createdAt phone')
-      .select('name slug category subscription isActive createdAt owner')
+      .select('name slug category subscription isActive createdAt owner phone email')
       .sort({ createdAt: -1 });
 
     const accounts = stores.map((store) => ({
       storeId: store._id,
       storeName: store.name,
       storeSlug: store.slug,
+      storePhone: store.phone,
+      storeEmail: store.email,
       category: store.category,
       storeActive: store.isActive,
       storeCreatedAt: store.createdAt,
@@ -197,6 +200,42 @@ router.put('/accounts/:storeId/cancel-subscription', superAdminProtect, async (r
     if (!store) return res.status(404).json({ success: false, message: 'Store not found' });
 
     res.json({ success: true, message: 'Subscription canceled', subscription: store.subscription });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ─── EDIT ACCOUNT INFO ───
+// PUT /api/superadmin/accounts/:storeId/edit
+router.put('/accounts/:storeId/edit', superAdminProtect, async (req, res) => {
+  try {
+    const { storeName, storePhone, storeEmail, userName, userEmail, userPhone, newPassword } = req.body;
+
+    const store = await Store.findById(req.params.storeId).populate('owner');
+    if (!store) return res.status(404).json({ success: false, message: 'Store not found' });
+
+    // Update store fields
+    const storeUpdates = {};
+    if (storeName)  storeUpdates.name  = storeName;
+    if (storePhone) storeUpdates.phone = storePhone;
+    if (storeEmail) storeUpdates.email = storeEmail;
+    if (Object.keys(storeUpdates).length) {
+      await Store.findByIdAndUpdate(req.params.storeId, storeUpdates);
+    }
+
+    // Update user fields
+    const user = await User.findById(store.owner._id).select('+password');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    if (userName)  user.name  = userName;
+    if (userEmail) user.email = userEmail;
+    if (userPhone) user.phone = userPhone;
+    if (newPassword && newPassword.length >= 6) {
+      user.password = newPassword; // pre-save hook hashes it
+    }
+    await user.save();
+
+    res.json({ success: true, message: 'Account updated successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
