@@ -34,12 +34,12 @@ router.post('/', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Service not found' });
     }
 
-    // 🚫 SLOT CHECK (only confirmed blocks)
+    // 🚫 SLOT CHECK (pending + confirmed block the slot)
     const existing = await Appointment.findOne({
       service: serviceId,
       appointmentDate: new Date(appointmentDate),
       startTime,
-      status: { $in: ['confirmed'] }
+      status: { $in: ['pending', 'confirmed'] }
     });
 
     if (existing) {
@@ -93,6 +93,10 @@ router.post('/', async (req, res) => {
     // 🔐 Generate unique token
     const managementToken = crypto.randomBytes(20).toString("hex");
 
+    // 🏪 Check store auto-accept setting
+    const store = await Store.findById(storeId).select('autoAccept');
+    const autoAccepted = store?.autoAccept === true;
+
     // 📌 Create appointment
     const appointment = await Appointment.create({
       store: storeId,
@@ -113,8 +117,8 @@ router.post('/', async (req, res) => {
       coupon: appliedCoupon,
       couponCode: appliedCoupon ? couponCode.toUpperCase() : null,
 
-      // ✅ STATUS LOGIC
-      status: payment?.status === "paid" ? "confirmed" : "pending",
+      // ✅ STATUS LOGIC — auto-accept or paid → confirmed
+      status: (payment?.status === "paid" || autoAccepted) ? "confirmed" : "pending",
 
       // 💳 payment
       payment: payment || {}

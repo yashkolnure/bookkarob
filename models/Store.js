@@ -50,6 +50,14 @@ const storeSchema = new mongoose.Schema({
     facebook: String,
     twitter: String
   },
+  googleReviewLink: {
+    type: String,
+    default: null
+  },
+  autoAccept: {
+    type: Boolean,
+    default: false
+  },
   businessHours: [
     {
       day: { type: String, enum: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] },

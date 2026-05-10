@@ -33,7 +33,7 @@ router.put('/my', protect, async (req, res) => {
     const allowedFields = [
       'name', 'description', 'category', 'address', 'phone',
       'email', 'website', 'socialLinks', 'businessHours', 'currency',
-      'logo', 'banner', 'theme'
+      'logo', 'banner', 'theme', 'googleReviewLink', 'autoAccept'
     ];
     const updates = {};
     allowedFields.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });

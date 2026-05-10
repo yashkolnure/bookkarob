@@ -20,7 +20,7 @@ const appointmentSchema = new mongoose.Schema({
   // Customer info (no account required)
   customer: {
     name: { type: String, required: true },
-    email: { type: String, required: true },
+    email: { type: String, required: false, default: '' },
     phone: { type: String, required: true },
     notes: { type: String }
   },
